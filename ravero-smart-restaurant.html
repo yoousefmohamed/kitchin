@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ravero — نظام المطعم الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8C97A;--gold-dark:#A07830;--black:#0F0F0F;--dark:#1A1A1A;--dark2:#242424;--dark3:#2E2E2E;--dark4:#383838;--gray:#6B6B6B;--gray2:#9A9A9A;--white:#FFF;--success:#2ECC71;--danger:#E74C3C;--warning:#F39C12;--info:#3498DB;--purple:#9B59B6;--sidebar-w:260px;--radius:12px;--radius-sm:8px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--black);color:var(--white);overflow-x:hidden;min-height:100vh}
+#splash{position:fixed;inset:0;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s,transform .6s}
+#splash.hidden{opacity:0;pointer-events:none;transform:scale(1.05)}
+.logo-mark{width:100px;height:100px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:52px;font-weight:900;color:var(--black);margin-bottom:20px;box-shadow:0 0 60px rgba(201,168,76,.4);animation:pulse-logo 2s ease-in-out infinite}
+@keyframes pulse-logo{0%,100%{box-shadow:0 0 40px rgba(201,168,76,.3)}50%{box-shadow:0 0 80px rgba(201,168,76,.6)}}
+.logo-name{font-size:42px;font-weight:900;letter-spacing:6px;background:linear-gradient(90deg,var(--gold-light),var(--gold),var(--gold-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.logo-sub{color:var(--gray2);font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-bottom:50px}
+#login-box{background:var(--dark2);border:1px solid var(--dark4);border-radius:20px;padding:36px 40px;width:380px}
+.login-title{font-size:20px;font-weight:700;margin-bottom:6px}
+.login-sub{color:var(--gray2);font-size:13px;margin-bottom:28px}
+.input-wrap{margin-bottom:16px}
+.input-wrap label{display:block;font-size:12px;color:var(--gray2);margin-bottom:6px}
+.input-wrap input{width:100%;padding:12px 16px;background:var(--dark3);border:1px solid var(--dark4);border-radius:var(--radius-sm);color:var(--white);font-family:'Cairo',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.input-wrap input:focus{border-color:var(--gold)}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border:none;border-radius:var(--radius-sm);color:var(--black);font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;margin-top:8px}
+.btn-login:hover{opacity:.9;transform:translateY(-1px)}
+.login-hint{color:var(--gray);font-size:12px;text-align:center;margin-top:16px}
+.demo-pills{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.demo-pill{padding:6px 14px;border-radius:20px;background:var(--dark3);border:1px solid var(--dark4);color:var(--gray2);font-size:11px;cursor:pointer;transition:all .2s}
+.demo-pill:hover{background:var(--gold);color:var(--black);border-color:var(--gold)}
+#app{display:none;height:100vh;overflow:hidden}
+#app.visible{display:flex}
+#sidebar{width:var(--sidebar-w);background:var(--dark);border-left:1px solid var(--dark3);display:flex;flex-direction:column;transition:width .3s;overflow:hidden;flex-shrink:0}
+#sidebar.collapsed{width:68px}
+.sidebar-header{padding:20px 18px 16px;border-bottom:1px solid var(--dark3);display:flex;align-items:center;gap:12px}
+.sidebar-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:var(--black);flex-shrink:0}
+.sidebar-brand{font-size:20px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,var(--gold-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;overflow:hidden}
+.sidebar-toggle{margin-right:auto;background:none;border:none;color:var(--gray2);cursor:pointer;font-size:18px;padding:4px;border-radius:6px;transition:color .2s}
+.sidebar-toggle:hover{color:var(--gold)}
+.sidebar-branch{margin:12px 14px;padding:10px 12px;background:var(--dark2);border-radius:var(--radius-sm);border:1px solid var(--dark3);cursor:pointer}
+.branch-label{font-size:10px;color:var(--gray);letter-spacing:.5px}
+.branch-name{font-size:13px;font-weight:600;color:var(--gold);white-space:nowrap;overflow:hidden}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sidebar-nav::-webkit-scrollbar{width:0}
+.nav-section{padding:16px 16px 6px;font-size:10px;color:var(--gray);letter-spacing:1px;white-space:nowrap;overflow:hidden}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 16px;margin:2px 8px;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;color:var(--gray2);font-size:14px;white-space:nowrap}
+.nav-item i{width:20px;text-align:center;font-size:16px;flex-shrink:0}
+.nav-item:hover{background:var(--dark2);color:var(--white)}
+.nav-item.active{background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.2)}
+.nav-item .badge{margin-right:auto;background:var(--danger);color:var(--white);font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700}
+.nav-item .badge.gold{background:var(--gold);color:var(--black)}
+.sidebar-footer{padding:14px;border-top:1px solid var(--dark3);display:flex;align-items:center;gap:10px;cursor:pointer}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--black);flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden}
+.user-role{font-size:11px;color:var(--gray2);white-space:nowrap}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{height:60px;background:var(--dark);border-bottom:1px solid var(--dark3);display:flex;align-items:center;gap:16px;padding:0 24px;flex-shrink:0}
+.topbar-title{font-size:18px;font-weight:700;flex:1}
+.topbar-search{display:flex;align-items:center;gap:10px;background:var(--dark2);border:1px solid var(--dark3);border-radius:var(--radius-sm);padding:8px 14px;flex:1;max-width:300px}
+.topbar-search input{background:none;border:none;color:var(--white);font-family:'Cairo',sans-serif;font-size:13px;outline:none;width:100%}
+.topbar-search i{color:var(--gray)}
+.topbar-actions{display:flex;gap:8px}
+.topbar-btn{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--dark2);border:1px solid var(--dark3);color:var(--gray2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;position:relative}
+.topbar-btn:hover{color:var(--gold);border-color:var(--dark4)}
+.topbar-btn .dot{position:absolute;top:6px;left:6px;width:8px;height:8px;background:var(--danger);border-radius:50%;border:2px solid var(--dark)}
+.live-clock{font-size:13px;color:var(--gray2);font-variant-numeric:tabular-nums}
+#page{flex:1;overflow-y:auto;padding:24px;background:var(--black)}
+#page::-webkit-scrollbar{width:6px}
+#page::-webkit-scrollbar-track{background:var(--black)}
+#page::-webkit-scrollbar-thumb{background:var(--dark4);border-radius:3px}
+.page-section{display:none}
+.page-section.active{display:block}
+.card{background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius);padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700}
+.card-action{font-size:12px;color:var(--gold);cursor:pointer}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+.stat-card:hover{border-color:var(--dark4);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 var(--radius) 0 60px;opacity:.08}
+.stat-card.gold::before{background:var(--gold)}
+.stat-card.green::before{background:var(--success)}
+.stat-card.blue::before{background:var(--info)}
+.stat-card.purple::before{background:var(--purple)}
+.stat-card.red::before{background:var(--danger)}
+.stat-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.stat-icon.gold{background:rgba(201,168,76,.15);color:var(--gold)}
+.stat-icon.green{background:rgba(46,204,113,.15);color:var(--success)}
+.stat-icon.blue{background:rgba(52,152,219,.15);color:var(--info)}
+.stat-icon.purple{background:rgba(155,89,182,.15);color:var(--purple)}
+.stat-icon.red{background:rgba(231,76,60,.15);color:var(--danger)}
+.stat-icon.orange{background:rgba(243,156,18,.15);color:var(--warning)}
+.stat-label{font-size:12px;color:var(--gray2);margin-bottom:4px}
+.stat-value{font-size:28px;font-weight:700;line-height:1;margin-bottom:6px}
+.stat-change{font-size:12px;display:flex;align-items:center;gap:4px}
+.stat-change.up{color:var(--success)}
+.stat-change.down{color:var(--danger)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-7-3{display:grid;grid-template-columns:7fr 3fr;gap:16px}
+.grid-6-4{display:grid;grid-template-columns:6fr 4fr;gap:16px}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:right;border-bottom:1px solid var(--dark3)}
+.data-table td{padding:12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
+.data-table tr:hover td{background:var(--dark2)}
+.data-table tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge.success{background:rgba(46,204,113,.15);color:var(--success)}
+.badge.danger{background:rgba(231,76,60,.15);color:var(--danger)}
+.badge.warning{background:rgba(243,156,18,.15);color:var(--warning)}
+.badge.info{background:rgba(52,152,219,.15);color:var(--info)}
+.badge.gold{background:rgba(201,168,76,.15);color:var(--gold)}
+.badge.purple{background:rgba(155,89,182,.15);color:var(--purple)}
+.badge.gray{background:var(--dark2);color:var(--gray2)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;transition:all .2s}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--black)}
+.btn-gold:hover{opacity:.9;transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--dark4);color:var(--gray2)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-ghost{background:var(--dark2);border:1px solid var(--dark3);color:var(--white)}
+.btn-ghost:hover{border-color:var(--dark4)}
+.btn-danger{background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);color:var(--danger)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-xs{padding:4px 10px;font-size:11px}
+.order-grid{display:grid;grid-template-columns:1fr 380px;gap:16px;height:calc(100vh - 108px)}
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;overflow-y:auto}
+.menu-grid::-webkit-scrollbar{width:0}
+.menu-item{background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .2s;overflow:hidden}
+.menu-item:hover{border-color:var(--gold);transform:translateY(-2px)}
+.menu-item-img{width:100%;height:90px;border-radius:var(--radius-sm);background:var(--dark2);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px}
+.menu-item-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.menu-item-desc{font-size:11px;color:var(--gray2);margin-bottom:10px;line-height:1.4}
+.menu-item-footer{display:flex;align-items:center;justify-content:space-between}
+.menu-item-price{font-size:15px;font-weight:700;color:var(--gold)}
+.add-btn{width:28px;height:28px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--black);font-size:16px;font-weight:700}
+.menu-cat-pills{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.cat-pill{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;background:var(--dark2);border:1px solid var(--dark3);color:var(--gray2);cursor:pointer;transition:all .2s}
+.cat-pill.active{background:rgba(201,168,76,.15);border-color:var(--gold);color:var(--gold)}
+.cart-panel{background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius);display:flex;flex-direction:column}
+.cart-header{padding:16px;border-bottom:1px solid var(--dark3)}
+.cart-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.table-select{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.table-badge{padding:4px 12px;border-radius:6px;font-size:11px;background:var(--dark2);border:1px solid var(--dark3);color:var(--gray2);cursor:pointer}
+.table-badge.selected{background:rgba(201,168,76,.15);border-color:var(--gold);color:var(--gold)}
+.cart-items{flex:1;overflow-y:auto;padding:12px}
+.cart-items::-webkit-scrollbar{width:0}
+.cart-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--dark2);border-radius:var(--radius-sm);margin-bottom:8px;border:1px solid var(--dark3)}
+.cart-item-emoji{font-size:24px;width:40px;text-align:center}
+.cart-item-info{flex:1}
+.cart-item-name{font-size:13px;font-weight:600}
+.cart-item-price{font-size:12px;color:var(--gold)}
+.qty-ctrl{display:flex;align-items:center;gap:6px}
+.qty-btn{width:24px;height:24px;border-radius:6px;background:var(--dark3);border:1px solid var(--dark4);color:var(--white);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-num{font-size:13px;font-weight:600;min-width:20px;text-align:center}
+.cart-summary{padding:14px;border-top:1px solid var(--dark3)}
+.summary-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--gray2)}
+.summary-row.total{font-size:17px;font-weight:700;color:var(--white);padding-top:10px;margin-top:6px;border-top:1px solid var(--dark3)}
+.payment-methods{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.pay-btn{padding:10px 6px;border-radius:var(--radius-sm);background:var(--dark2);border:1px solid var(--dark3);color:var(--gray2);font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:4px}
+.pay-btn.active{background:rgba(201,168,76,.12);border-color:var(--gold);color:var(--gold)}
+.confirm-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border:none;border-radius:var(--radius-sm);color:var(--black);font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.confirm-btn:hover{opacity:.9;transform:translateY(-1px)}
+.orders-board{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.order-col{background:var(--dark2);border-radius:var(--radius);padding:12px;border:1px solid var(--dark3)}
+.order-col-header{font-size:12px;font-weight:700;color:var(--gray2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.order-col-header .count{background:var(--dark3);padding:2px 8px;border-radius:10px;font-size:11px}
+.order-card{background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.order-card:hover{border-color:var(--gold)}
+.order-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.order-num{font-size:13px;font-weight:700}
+.order-time{font-size:11px;color:var(--gray2)}
+.order-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.order-price{font-size:13px;font-weight:700;color:var(--gold)}
+.col-new{border-top:2px solid var(--info)}
+.col-prep{border-top:2px solid var(--warning)}
+.col-ready{border-top:2px solid var(--success)}
+.col-done{border-top:2px solid var(--gray)}
+.progress-bar{height:6px;background:var(--dark3);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width .3s}
+.progress-fill.green{background:var(--success)}
+.progress-fill.yellow{background:var(--warning)}
+.progress-fill.red{background:var(--danger)}
+.delivery-card{background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius);padding:14px;display:flex;gap:14px;align-items:flex-start;transition:border-color .2s;cursor:pointer;margin-bottom:10px}
+.delivery-card:hover{border-color:var(--gold)}
+.delivery-avatar{width:44px;height:44px;border-radius:50%;background:var(--dark2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.map-placeholder{background:var(--dark2);border-radius:var(--radius);height:280px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;border:1px solid var(--dark3);position:relative;overflow:hidden}
+.map-dot{position:absolute;width:14px;height:14px;border-radius:50%;animation:map-pulse 2s ease-in-out infinite}
+@keyframes map-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.7}}
+.loyalty-card{background:linear-gradient(135deg,var(--dark) 0%,#1a1400 100%);border:1px solid var(--gold-dark);border-radius:16px;padding:24px;position:relative;overflow:hidden}
+.loyalty-card::before{content:'';position:absolute;top:-40px;left:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(201,168,76,.15) 0%,transparent 70%)}
+.ai-card{background:linear-gradient(135deg,rgba(155,89,182,.08),rgba(52,152,219,.05));border:1px solid rgba(155,89,182,.2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.ai-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ai-icon{width:34px;height:34px;background:rgba(155,89,182,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--purple);font-size:16px}
+.ai-title{font-size:13px;font-weight:700}
+.ai-body{font-size:12px;color:var(--gray2);line-height:1.7}
+#toast-container{position:fixed;top:20px;left:20px;z-index:9998;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--dark2);border:1px solid var(--dark4);border-radius:var(--radius);padding:14px 18px;min-width:280px;display:flex;align-items:flex-start;gap:12px;animation:slide-in .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.removing{animation:slide-out .3s ease forwards}
+@keyframes slide-in{from{transform:translateX(-110%);opacity:0}to{transform:none;opacity:1}}
+@keyframes slide-out{to{transform:translateX(-110%);opacity:0}}
+.toast-icon{font-size:18px}
+.toast-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.toast-msg{font-size:12px;color:var(--gray2)}
+.toast-close{color:var(--gray);cursor:pointer;font-size:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9990;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--dark);border:1px solid var(--dark3);border-radius:16px;padding:28px;width:500px;max-width:95vw;transform:translateY(20px);transition:transform .2s}
+.modal-overlay.open .modal{transform:none}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--gray2);cursor:pointer;font-size:20px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;color:var(--gray2);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;background:var(--dark2);border:1px solid var(--dark3);border-radius:var(--radius-sm);color:var(--white);font-family:'Cairo',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold)}
+.form-group select option{background:var(--dark2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tab-bar{display:flex;gap:4px;background:var(--dark2);border-radius:var(--radius-sm);padding:4px;margin-bottom:16px}
+.tab-btn{flex:1;padding:9px;border-radius:6px;border:none;background:none;color:var(--gray2);font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.tab-btn.active{background:var(--dark);color:var(--white)}
+.kitchen-ticker{background:var(--dark2);border-bottom:1px solid var(--dark3);padding:10px 24px;display:flex;gap:24px;align-items:center;overflow:hidden}
+.ticker-item{display:flex;align-items:center;gap:8px;font-size:12px;white-space:nowrap}
+.ticker-item i{color:var(--gold)}
+.online-indicator{width:8px;height:8px;background:var(--success);border-radius:50%;animation:blink 2s ease-in-out infinite;display:inline-block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.top-product{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.top-product:last-child{border-bottom:none}
+.top-product-rank{width:24px;height:24px;border-radius:6px;background:var(--dark2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.top-product-rank.gold-rank{background:rgba(201,168,76,.15);color:var(--gold)}
+.top-product-info{flex:1}
+.top-product-name{font-size:12px;font-weight:600}
+.top-product-sold{font-size:11px;color:var(--gray2)}
+.top-product-revenue{font-size:13px;font-weight:700;color:var(--gold)}
+.chart-wrap{position:relative;height:220px}
+.chart-wrap-sm{position:relative;height:160px}
+.inv-alert{background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.inv-alert i{color:var(--danger);font-size:20px}
+.inv-alert-text{font-size:13px}
+.inv-alert-text strong{color:var(--danger)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--dark4);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">عنوان</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+<div id="splash">
+  <div class="logo-mark">R</div>
+  <div class="logo-name">RAVERO</div>
+  <div class="logo-sub">Smart Restaurant System</div>
+  <div id="login-box">
+    <div class="login-title">مرحباً بعودتك</div>
+    <div class="login-sub">سجّل الدخول للوصول إلى لوحة الإدارة</div>
+    <div class="input-wrap"><label>البريد الإلكتروني</label><input type="email" id="login-email" placeholder="admin@ravero.com"></div>
+    <div class="input-wrap"><label>كلمة المرور</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" onclick="doLogin()"><i class="fa fa-sign-in-alt"></i> دخول إلى النظام</button>
+    <div class="login-hint">حسابات تجريبية سريعة:</div>
+    <div class="demo-pills">
+      <div class="demo-pill" onclick="quickLogin('مدير النظام','admin')">👑 مدير النظام</div>
+      <div class="demo-pill" onclick="quickLogin('موظف الكاشير','cashier')">💳 كاشير</div>
+      <div class="demo-pill" onclick="quickLogin('مدير المطبخ','kitchen')">👨‍🍳 مطبخ</div>
+      <div class="demo-pill" onclick="quickLogin('سائق التوصيل','driver')">🛵 توصيل</div>
+    </div>
+  </div>
+</div>
+<div id="app">
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">R</div>
+      <div class="sidebar-brand">RAVERO</div>
+      <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
+    </div>
+    <div class="sidebar-branch" onclick="showModal('اختيار الفرع','<div class=\'form-group\'><label>الفرع الحالي</label><select><option>الفرع الرئيسي — وسط المدينة</option><option>فرع المستشفى</option><option>فرع الجامعة</option><option>فرع المطار</option></select></div><button class=\'btn btn-gold\' style=\'width:100%;margin-top:12px\' onclick=\'closeModal()\'>تأكيد الاختيار</button>')">
+      <div class="branch-label">الفرع الحالي</div>
+      <div class="branch-name"><span class="online-indicator"></span> الفرع الرئيسي — وسط المدينة</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">الرئيسية</div>
+      <div class="nav-item active" onclick="goTo('dashboard',this)"><i class="fa fa-chart-line"></i><span>لوحة التحكم</span></div>
+      <div class="nav-item" onclick="goTo('pos',this)"><i class="fa fa-cash-register"></i><span>نقطة البيع POS</span><span class="badge gold">3</span></div>
+      <div class="nav-section">إدارة العمليات</div>
+      <div class="nav-item" onclick="goTo('orders',this)"><i class="fa fa-receipt"></i><span>الطلبات</span><span class="badge">7</span></div>
+      <div class="nav-item" onclick="goTo('kitchen',this)"><i class="fa fa-fire"></i><span>شاشة المطبخ</span><span class="badge">4</span></div>
+      <div class="nav-item" onclick="goTo('delivery',this)"><i class="fa fa-motorcycle"></i><span>التوصيل</span></div>
+      <div class="nav-item" onclick="goTo('tables',this)"><i class="fa fa-chair"></i><span>الطاولات</span></div>
+      <div class="nav-section">المنيو والمخزون</div>
+      <div class="nav-item" onclick="goTo('menu-mgmt',this)"><i class="fa fa-utensils"></i><span>إدارة المنيو</span></div>
+      <div class="nav-item" onclick="goTo('inventory',this)"><i class="fa fa-boxes"></i><span>المخزون</span><span class="badge">2</span></div>
+      <div class="nav-section">العملاء والتسويق</div>
+      <div class="nav-item" onclick="goTo('customers',this)"><i class="fa fa-users"></i><span>العملاء</span></div>
+      <div class="nav-item" onclick="goTo('loyalty',this)"><i class="fa fa-star"></i><span>الولاء والنقاط</span></div>
+      <div class="nav-item" onclick="goTo('marketing',this)"><i class="fa fa-bullhorn"></i><span>التسويق والحملات</span></div>
+      <div class="nav-section">المالية</div>
+      <div class="nav-item" onclick="goTo('accounting',this)"><i class="fa fa-file-invoice-dollar"></i><span>المحاسبة</span></div>
+      <div class="nav-item" onclick="goTo('reports',this)"><i class="fa fa-chart-bar"></i><span>التقارير</span></div>
+      <div class="nav-section">الذكاء الاصطناعي</div>
+      <div class="nav-item" onclick="goTo('ai',this)"><i class="fa fa-robot"></i><span>مركز الذكاء الاصطناعي</span></div>
+      <div class="nav-section">الإعدادات</div>
+      <div class="nav-item" onclick="goTo('settings',this)"><i class="fa fa-cog"></i><span>الإعدادات</span></div>
+      <div class="nav-item" onclick="goTo('employees',this)"><i class="fa fa-id-card"></i><span>الموظفون</span></div>
+      <div class="nav-item" onclick="goTo('branches',this)"><i class="fa fa-store"></i><span>الفروع</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="user-avatar-sb">م</div>
+      <div>
+        <div class="user-name" id="user-name-sb">مدير النظام</div>
+        <div class="user-role" id="user-role-sb">مدير | صلاحيات كاملة</div>
+      </div>
+    </div>
+  </div>
+  <div id="main">
+    <div id="topbar">
+      <div class="topbar-title" id="page-title">لوحة التحكم</div>
+      <div class="topbar-search"><i class="fa fa-search"></i><input type="text" placeholder="بحث سريع..."></div>
+      <div class="live-clock" id="live-clock">00:00:00</div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" onclick="showNotifications()"><i class="fa fa-bell"></i><div class="dot"></div></button>
+        <button class="topbar-btn"><i class="fa fa-moon"></i></button>
+        <button class="topbar-btn" onclick="doLogout()"><i class="fa fa-sign-out-alt"></i></button>
+      </div>
+    </div>
+    <div class="kitchen-ticker">
+      <div class="ticker-item"><i class="fa fa-circle" style="color:var(--success);font-size:8px"></i> النظام يعمل</div>
+      <div class="ticker-item"><i class="fa fa-wifi"></i> متصل</div>
+      <div class="ticker-item"><i class="fa fa-shopping-bag"></i> <span id="ticker-orders">147</span> طلب اليوم</div>
+      <div class="ticker-item"><i class="fa fa-coins"></i> <span id="ticker-revenue">14,280</span> ج.م</div>
+      <div class="ticker-item"><i class="fa fa-users"></i> <span id="ticker-customers">412</span> عميل نشط</div>
+      <div class="ticker-item"><i class="fa fa-thermometer-half"></i> المطبخ: نشط</div>
+    </div>
+    <div id="page">
+<!-- DASHBOARD -->
+<section id="sec-dashboard" class="page-section active">
+  <div class="stats-grid">
+    <div class="stat-card gold"><div class="stat-icon gold"><i class="fa fa-coins"></i></div><div class="stat-label">إيرادات اليوم</div><div class="stat-value">14,280</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +18.4% عن أمس</div></div>
+    <div class="stat-card green"><div class="stat-icon green"><i class="fa fa-shopping-bag"></i></div><div class="stat-label">إجمالي الطلبات</div><div class="stat-value">147</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +12 عن أمس</div></div>
+    <div class="stat-card blue"><div class="stat-icon blue"><i class="fa fa-users"></i></div><div class="stat-label">عملاء جدد</div><div class="stat-value">23</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +5 عن أمس</div></div>
+    <div class="stat-card purple"><div class="stat-icon purple"><i class="fa fa-star"></i></div><div class="stat-label">متوسط التقييم</div><div class="stat-value">4.8</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +0.2</div></div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon orange"><i class="fa fa-clock"></i></div><div class="stat-label">متوسط التحضير</div><div class="stat-value">12 <small style="font-size:14px">د</small></div><div class="stat-change down"><i class="fa fa-arrow-down"></i> -2 دقيقة</div></div>
+    <div class="stat-card"><div class="stat-icon red"><i class="fa fa-motorcycle"></i></div><div class="stat-label">طلبات التوصيل</div><div class="stat-value">38</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +8</div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fa fa-percentage"></i></div><div class="stat-label">الربح الصافي</div><div class="stat-value">34%</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +2%</div></div>
+    <div class="stat-card"><div class="stat-icon gold"><i class="fa fa-receipt"></i></div><div class="stat-label">متوسط قيمة الطلب</div><div class="stat-value">97 <small style="font-size:14px">ج.م</small></div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +6</div></div>
+  </div>
+  <div class="grid-7-3" style="margin-bottom:20px">
+    <div class="card"><div class="card-header"><div class="card-title">📈 إيرادات آخر 7 أيام</div><div class="card-action">تفاصيل</div></div><div class="chart-wrap"><canvas id="revenueChart"></canvas></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">🍽️ توزيع الطلبات</div></div><div class="chart-wrap"><canvas id="orderTypeChart"></canvas></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><div class="card-title">🏆 أكثر المنتجات مبيعاً</div><div class="card-action">عرض الكل</div></div><div id="top-products-list"></div></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🤖 تنبيهات الذكاء الاصطناعي</div></div>
+      <div class="ai-card"><div class="ai-card-header"><div class="ai-icon"><i class="fa fa-chart-line"></i></div><div class="ai-title">توقع الذروة</div></div><div class="ai-body">يتوقع النظام ارتفاعاً في الطلبات بنسبة 35% بين 7-9 مساءً. يُنصح بإعداد 20% مخزون إضافي من البرجر والبيتزا.</div></div>
+      <div class="ai-card"><div class="ai-card-header"><div class="ai-icon"><i class="fa fa-exclamation-triangle"></i></div><div class="ai-title">تحذير المخزون</div></div><div class="ai-body">صلصة الطماطم ستنفد خلال 6 ساعات بناءً على معدل الاستهلاك الحالي. جهّز طلباً للمورد الآن.</div></div>
+      <div class="ai-card"><div class="ai-card-header"><div class="ai-icon"><i class="fa fa-gift"></i></div><div class="ai-title">فرصة تسويقية</div></div><div class="ai-body">23 عميل اشتروا القهوة في الصباح لم يطلبوا الغداء بعد. أرسل كوبون 15% الآن.</div></div>
+    </div>
+  </div>
+</section>
+<!-- POS -->
+<section id="sec-pos" class="page-section">
+  <div class="menu-cat-pills">
+    <div class="cat-pill active" onclick="filterCat('all',this)">🍽️ الكل</div>
+    <div class="cat-pill" onclick="filterCat('burger',this)">🍔 برجر</div>
+    <div class="cat-pill" onclick="filterCat('pizza',this)">🍕 بيتزا</div>
+    <div class="cat-pill" onclick="filterCat('drinks',this)">☕ مشروبات</div>
+    <div class="cat-pill" onclick="filterCat('pasta',this)">🍝 باستا</div>
+    <div class="cat-pill" onclick="filterCat('dessert',this)">🍰 حلويات</div>
+    <div class="cat-pill" onclick="filterCat('salad',this)">🥗 سلطات</div>
+  </div>
+  <div class="order-grid">
+    <div><div class="menu-grid" id="menu-grid"></div></div>
+    <div class="cart-panel">
+      <div class="cart-header">
+        <div class="cart-title">🧾 الطلب الحالي</div>
+        <div class="table-select">
+          <div class="table-badge selected">T-1</div>
+          <div class="table-badge" onclick="selectTable(this)">T-2</div>
+          <div class="table-badge" onclick="selectTable(this)">T-3</div>
+          <div class="table-badge" onclick="selectTable(this)">T-4</div>
+          <div class="table-badge" onclick="selectTable(this)">🛵 دليفري</div>
+        </div>
+      </div>
+      <div class="cart-items" id="cart-items"><div style="text-align:center;color:var(--gray);padding:40px 0;font-size:13px"><i class="fa fa-shopping-cart" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>السلة فارغة</div></div>
+      <div class="cart-summary">
+        <div class="summary-row"><span>المجموع الفرعي</span><span id="sub-total">0 ج.م</span></div>
+        <div class="summary-row"><span>ضريبة 14%</span><span id="vat-total">0 ج.م</span></div>
+        <div class="summary-row"><span>خصم</span><span id="disc-total" style="color:var(--success)">0-</span></div>
+        <div class="summary-row total"><span>الإجمالي</span><span id="grand-total">0 ج.م</span></div>
+        <div class="payment-methods">
+          <button class="pay-btn active" onclick="selectPay(this)"><i class="fa fa-money-bill-wave"></i> كاش</button>
+          <button class="pay-btn" onclick="selectPay(this)"><i class="fa fa-credit-card"></i> كارت</button>
+          <button class="pay-btn" onclick="selectPay(this)"><i class="fa fa-wallet"></i> محفظة</button>
+        </div>
+        <button class="confirm-btn" onclick="confirmOrder()">✅ تأكيد الطلب وطباعة الفاتورة</button>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ORDERS -->
+<section id="sec-orders" class="page-section">
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-gold btn-sm" onclick="showAddOrder()"><i class="fa fa-plus"></i> طلب جديد</button>
+    <button class="btn btn-ghost btn-sm"><i class="fa fa-filter"></i> فلترة</button>
+    <button class="btn btn-ghost btn-sm"><i class="fa fa-print"></i> طباعة</button>
+    <div style="margin-right:auto;display:flex;gap:6px;align-items:center">
+      <span class="badge info">7 جديد</span><span class="badge warning">4 تحضير</span><span class="badge success">3 جاهز</span><span class="badge gray">133 منتهي</span>
+    </div>
+  </div>
+  <div class="orders-board" id="orders-board"></div>
+</section>
+<!-- KITCHEN -->
+<section id="sec-kitchen" class="page-section">
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div style="text-align:center"><div style="font-size:28px;font-weight:900;color:var(--warning)">4</div><div style="font-size:11px;color:var(--gray2)">قيد التحضير</div></div>
+      <div style="text-align:center"><div style="font-size:28px;font-weight:900;color:var(--success)">3</div><div style="font-size:11px;color:var(--gray2)">جاهز</div></div>
+      <div style="text-align:center"><div style="font-size:28px;font-weight:900;color:var(--info)">12 <small style="font-size:14px">د</small></div><div style="font-size:11px;color:var(--gray2)">متوسط الوقت</div></div>
+      <div style="margin-right:auto"><button class="btn btn-gold btn-sm"><i class="fa fa-expand"></i> ملء الشاشة</button></div>
+    </div>
+  </div>
+  <div class="grid-2" id="kitchen-board"></div>
+</section>
+<!-- DELIVERY -->
+<section id="sec-delivery" class="page-section">
+  <div class="grid-6-4">
+    <div>
+      <div style="display:flex;gap:10px;margin-bottom:16px"><button class="btn btn-gold btn-sm"><i class="fa fa-plus"></i> طلب توصيل</button><button class="btn btn-ghost btn-sm"><i class="fa fa-map"></i> الخريطة</button></div>
+      <div id="delivery-list"></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header"><div class="card-title">🗺️ خريطة التتبع الحي</div><div class="online-indicator"></div></div>
+        <div class="map-placeholder">
+          <div class="map-dot" style="background:var(--gold);top:40%;right:35%"></div>
+          <div class="map-dot" style="background:var(--info);top:60%;right:55%;animation-delay:.5s"></div>
+          <div class="map-dot" style="background:var(--success);top:30%;right:65%;animation-delay:1s"></div>
+          <i class="fa fa-map-marked-alt" style="font-size:48px;color:var(--dark4)"></i>
+          <div style="color:var(--gray2);font-size:12px">● مندوبون نشطون على الخريطة</div>
+        </div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+        <div class="stat-card"><div class="stat-icon orange"><i class="fa fa-motorcycle"></i></div><div class="stat-label">مندوبون نشطون</div><div class="stat-value">3</div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fa fa-check"></i></div><div class="stat-label">تم التسليم اليوم</div><div class="stat-value">28</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- TABLES -->
+<section id="sec-tables" class="page-section">
+  <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+    <div class="badge success"><i class="fa fa-circle" style="font-size:8px"></i> متاحة: 8</div>
+    <div class="badge danger"><i class="fa fa-circle" style="font-size:8px"></i> مشغولة: 6</div>
+    <div class="badge warning"><i class="fa fa-circle" style="font-size:8px"></i> محجوزة: 2</div>
+    <button class="btn btn-gold btn-sm" style="margin-right:auto"><i class="fa fa-plus"></i> حجز طاولة</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="tables-grid"></div>
+</section>
+<!-- MENU MGMT -->
+<section id="sec-menu-mgmt" class="page-section">
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <button class="btn btn-gold btn-sm" onclick="showAddMenuItem()"><i class="fa fa-plus"></i> إضافة منتج</button>
+    <button class="btn btn-ghost btn-sm"><i class="fa fa-download"></i> تصدير المنيو</button>
+  </div>
+  <div class="card">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab(this)">الكل (24)</button>
+      <button class="tab-btn" onclick="switchTab(this)">برجر (5)</button>
+      <button class="tab-btn" onclick="switchTab(this)">بيتزا (4)</button>
+      <button class="tab-btn" onclick="switchTab(this)">مشروبات (8)</button>
+      <button class="tab-btn" onclick="switchTab(this)">حلويات (4)</button>
+    </div>
+    <table class="data-table"><thead><tr><th>المنتج</th><th>الفئة</th><th>السعر</th><th>تكلفة الإنتاج</th><th>هامش الربح</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="menu-table-body"></tbody></table>
+  </div>
+</section>
+<!-- INVENTORY -->
+<section id="sec-inventory" class="page-section">
+  <div class="inv-alert"><i class="fa fa-exclamation-triangle"></i><div class="inv-alert-text"><strong>تحذير:</strong> صنفان على وشك النفاد — صلصة الطماطم وخبز البرجر.</div></div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-gold btn-sm"><i class="fa fa-plus"></i> إضافة صنف</button>
+    <button class="btn btn-ghost btn-sm"><i class="fa fa-file-invoice"></i> طلب شراء</button>
+    <button class="btn btn-ghost btn-sm"><i class="fa fa-exchange-alt"></i> تحويل بين الفروع</button>
+  </div>
+  <div class="card"><table class="data-table"><thead><tr><th>الصنف</th><th>الكمية</th><th>الحد الأدنى</th><th>الوحدة</th><th>المورد</th><th>الحالة</th></tr></thead><tbody id="inventory-table"></tbody></table></div>
+</section>
+<!-- CUSTOMERS -->
+<section id="sec-customers" class="page-section">
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <button class="btn btn-gold btn-sm"><i class="fa fa-user-plus"></i> إضافة عميل</button>
+    <button class="btn btn-ghost btn-sm"><i class="fa fa-download"></i> تصدير</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px" id="customers-grid"></div>
+</section>
+<!-- LOYALTY -->
+<section id="sec-loyalty" class="page-section">
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="loyalty-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div style="font-size:12px;color:var(--gray2);margin-bottom:4px">إجمالي النقاط الصادرة</div><div style="font-size:48px;font-weight:900;color:var(--gold)">428,500</div><div style="font-size:13px;color:var(--gray2)">نقطة ولاء</div></div>
+        <div style="font-size:40px">⭐</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">الطبقات والمزايا</div>
+      <table class="data-table"><thead><tr><th>الطبقة</th><th>النقاط</th><th>العملاء</th><th>الخصم</th></tr></thead>
+      <tbody>
+        <tr><td>🥉 برونز</td><td>0 - 499</td><td><span class="badge info">1,240</span></td><td>5%</td></tr>
+        <tr><td>🥈 فضي</td><td>500 - 1999</td><td><span class="badge gray">680</span></td><td>10%</td></tr>
+        <tr><td>🥇 ذهبي</td><td>2000 - 4999</td><td><span class="badge gold">312</span></td><td>15%</td></tr>
+        <tr><td>👑 VIP</td><td>5000+</td><td><span class="badge warning">214</span></td><td>20%</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">🎟️ الكوبونات النشطة</div><button class="btn btn-gold btn-sm" onclick="showAddCoupon()"><i class="fa fa-plus"></i> كوبون جديد</button></div>
+    <table class="data-table"><thead><tr><th>الكود</th><th>الخصم</th><th>الحد الأقصى</th><th>المستخدم</th><th>الانتهاء</th><th>الحالة</th></tr></thead><tbody id="coupons-table"></tbody></table>
+  </div>
+</section>
+<!-- MARKETING -->
+<section id="sec-marketing" class="page-section">
+  <div class="stats-grid" style="margin-bottom:16px">
+    <div class="stat-card"><div class="stat-icon blue"><i class="fa fa-paper-plane"></i></div><div class="stat-label">إجمالي الرسائل</div><div class="stat-value">12,430</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +850</div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fa fa-mouse-pointer"></i></div><div class="stat-label">معدل النقر</div><div class="stat-value">24.3%</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +3.1%</div></div>
+    <div class="stat-card"><div class="stat-icon gold"><i class="fa fa-money-bill-wave"></i></div><div class="stat-label">إيرادات الحملات</div><div class="stat-value">8,920</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +22%</div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="fa fa-users"></i></div><div class="stat-label">عملاء محولون</div><div class="stat-value">342</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +47</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">📣 الحملات النشطة</div><button class="btn btn-gold btn-sm"><i class="fa fa-plus"></i> حملة جديدة</button></div>
+      <table class="data-table"><thead><tr><th>الحملة</th><th>القناة</th><th>المرسل</th><th>الفتح</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>عرض رمضان 50%</td><td><span class="badge warning">WhatsApp</span></td><td>2,400</td><td>68%</td><td><span class="badge success">نشطة</span></td></tr>
+        <tr><td>الجمعة السعيدة</td><td><span class="badge info">SMS</span></td><td>1,800</td><td>34%</td><td><span class="badge success">نشطة</span></td></tr>
+        <tr><td>عيد ميلاد خاص</td><td><span class="badge gold">Email</span></td><td>320</td><td>72%</td><td><span class="badge success">نشطة</span></td></tr>
+        <tr><td>برجر الأسبوع</td><td><span class="badge purple">Push</span></td><td>4,100</td><td>21%</td><td><span class="badge gray">انتهت</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">📊 أداء القنوات</div></div><div class="chart-wrap"><canvas id="marketingChart"></canvas></div></div>
+  </div>
+</section>
+<!-- ACCOUNTING -->
+<section id="sec-accounting" class="page-section">
+  <div class="stats-grid" style="margin-bottom:16px">
+    <div class="stat-card gold"><div class="stat-icon gold"><i class="fa fa-arrow-up"></i></div><div class="stat-label">إيرادات الشهر</div><div class="stat-value">284,600</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +18%</div></div>
+    <div class="stat-card red"><div class="stat-icon red"><i class="fa fa-arrow-down"></i></div><div class="stat-label">مصروفات الشهر</div><div class="stat-value">187,300</div><div class="stat-change down"><i class="fa fa-arrow-down"></i> -5%</div></div>
+    <div class="stat-card green"><div class="stat-icon green"><i class="fa fa-chart-line"></i></div><div class="stat-label">صافي الربح</div><div class="stat-value">97,300</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +34%</div></div>
+    <div class="stat-card blue"><div class="stat-icon blue"><i class="fa fa-receipt"></i></div><div class="stat-label">ضريبة القيمة المضافة</div><div class="stat-value">39,844</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">📋 القيود اليومية</div><button class="btn btn-gold btn-sm"><i class="fa fa-plus"></i> قيد جديد</button></div>
+      <table class="data-table"><thead><tr><th>التاريخ</th><th>البيان</th><th>مدين</th><th>دائن</th><th>النوع</th></tr></thead>
+      <tbody>
+        <tr><td>اليوم</td><td>مبيعات نقدية</td><td>14,280</td><td>—</td><td><span class="badge success">إيراد</span></td></tr>
+        <tr><td>اليوم</td><td>مشتريات خضروات</td><td>—</td><td>1,200</td><td><span class="badge danger">مصروف</span></td></tr>
+        <tr><td>اليوم</td><td>رواتب الموظفين</td><td>—</td><td>8,500</td><td><span class="badge danger">مصروف</span></td></tr>
+        <tr><td>اليوم</td><td>مبيعات توصيل</td><td>3,840</td><td>—</td><td><span class="badge success">إيراد</span></td></tr>
+        <tr><td>أمس</td><td>فاتورة كهرباء</td><td>—</td><td>2,100</td><td><span class="badge warning">مصروف</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">📈 أرباح وخسائر — 6 أشهر</div></div><div class="chart-wrap"><canvas id="plChart"></canvas></div></div>
+  </div>
+</section>
+<!-- REPORTS -->
+<section id="sec-reports" class="page-section">
+  <div class="grid-3">
+    <div class="card" style="cursor:pointer" onclick="showToast('📊','جار تحميل التقرير...','تقرير المبيعات')"><div class="stat-icon gold" style="margin-bottom:10px"><i class="fa fa-chart-bar"></i></div><div class="card-title">تقرير المبيعات</div><div style="font-size:12px;color:var(--gray2);margin-top:6px">تفصيل كامل بالمبيعات اليومية والشهرية</div><button class="btn btn-ghost btn-sm" style="margin-top:12px"><i class="fa fa-download"></i> تنزيل PDF</button></div>
+    <div class="card" style="cursor:pointer"><div class="stat-icon blue" style="margin-bottom:10px"><i class="fa fa-boxes"></i></div><div class="card-title">تقرير المخزون</div><div style="font-size:12px;color:var(--gray2);margin-top:6px">حركة الأصناف والمتبقيات والهالك</div><button class="btn btn-ghost btn-sm" style="margin-top:12px"><i class="fa fa-download"></i> تنزيل PDF</button></div>
+    <div class="card" style="cursor:pointer"><div class="stat-icon green" style="margin-bottom:10px"><i class="fa fa-users"></i></div><div class="card-title">تقرير العملاء</div><div style="font-size:12px;color:var(--gray2);margin-top:6px">تحليل قاعدة العملاء والاحتفاظ</div><button class="btn btn-ghost btn-sm" style="margin-top:12px"><i class="fa fa-download"></i> تنزيل PDF</button></div>
+    <div class="card" style="cursor:pointer"><div class="stat-icon orange" style="margin-bottom:10px"><i class="fa fa-motorcycle"></i></div><div class="card-title">تقرير التوصيل</div><div style="font-size:12px;color:var(--gray2);margin-top:6px">أداء المندوبين وأوقات التسليم</div><button class="btn btn-ghost btn-sm" style="margin-top:12px"><i class="fa fa-download"></i> تنزيل PDF</button></div>
+    <div class="card" style="cursor:pointer"><div class="stat-icon purple" style="margin-bottom:10px"><i class="fa fa-file-invoice-dollar"></i></div><div class="card-title">التقرير المالي</div><div style="font-size:12px;color:var(--gray2);margin-top:6px">الميزانية والأرباح والخسائر والضرائب</div><button class="btn btn-ghost btn-sm" style="margin-top:12px"><i class="fa fa-download"></i> تنزيل PDF</button></div>
+    <div class="card" style="cursor:pointer"><div class="stat-icon red" style="margin-bottom:10px"><i class="fa fa-robot"></i></div><div class="card-title">تقرير الذكاء الاصطناعي</div><div style="font-size:12px;color:var(--gray2);margin-top:6px">توقعات وتوصيات مدعومة بالبيانات</div><button class="btn btn-ghost btn-sm" style="margin-top:12px"><i class="fa fa-download"></i> تنزيل PDF</button></div>
+  </div>
+</section>
+<!-- AI -->
+<section id="sec-ai" class="page-section">
+  <div class="stats-grid" style="margin-bottom:16px">
+    <div class="stat-card"><div class="stat-icon purple"><i class="fa fa-brain"></i></div><div class="stat-label">دقة التوقعات</div><div class="stat-value">94.2%</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> +2.1%</div></div>
+    <div class="stat-card"><div class="stat-icon gold"><i class="fa fa-lightbulb"></i></div><div class="stat-label">توصيات هذا الشهر</div><div class="stat-value">48</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> نفّذ 31 منها</div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fa fa-comments"></i></div><div class="stat-label">رسائل الروبوت</div><div class="stat-value">1,284</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> حل 87%</div></div>
+    <div class="stat-card"><div class="stat-icon blue"><i class="fa fa-chart-pie"></i></div><div class="stat-label">وفورات اقتصادية</div><div class="stat-value">12,400</div><div class="stat-change up"><i class="fa fa-arrow-up"></i> ج.م محفوظة</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-header"><div class="card-title">📈 توقع المبيعات — 7 أيام</div></div><div class="chart-wrap"><canvas id="aiChart"></canvas></div></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🤖 توصيات الذكاء الاصطناعي</div><div class="online-indicator"></div></div>
+      <div class="ai-card"><div class="ai-card-header"><div class="ai-icon"><i class="fa fa-trending-up"></i></div><div class="ai-title">ارفع سعر البرجر المزدوج</div></div><div class="ai-body">الطلب ارتفع 40% هذا الأسبوع. رفع 5-8 ج.م لن يؤثر على المبيعات ويزيد الهامش 12%.</div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-gold btn-xs">✅ تطبيق</button><button class="btn btn-outline btn-xs">تجاهل</button></div></div>
+      <div class="ai-card"><div class="ai-card-header"><div class="ai-icon"><i class="fa fa-gift"></i></div><div class="ai-title">عملاء مهددون بالفقد</div></div><div class="ai-body">23 عميل لم يطلبوا منذ 30 يوماً. أرسل كوبون 20% قبل فوات الأوان.</div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-gold btn-xs">📤 إرسال</button><button class="btn btn-outline btn-xs">عرض القائمة</button></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">💬 مساعد المطعم الذكي</div><div class="badge purple">مدعوم بـ AI</div></div>
+    <div style="background:var(--dark2);border-radius:var(--radius-sm);padding:14px;height:160px;overflow-y:auto;margin-bottom:12px" id="ai-chat">
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="width:28px;height:28px;border-radius:50%;background:rgba(155,89,182,.2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
+        <div style="background:var(--dark3);border-radius:0 10px 10px 10px;padding:10px 12px;font-size:12px;max-width:80%">مرحباً! أنا مساعد Ravero الذكي. اسألني عن المبيعات والتوقعات والتوصيات.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="ai-input" placeholder="اسألني أي شيء عن مطعمك..." style="flex:1;padding:10px 14px;background:var(--dark2);border:1px solid var(--dark3);border-radius:var(--radius-sm);color:var(--white);font-family:'Cairo',sans-serif;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')sendAI()">
+      <button class="btn btn-gold" onclick="sendAI()"><i class="fa fa-paper-plane"></i></button>
+    </div>
+  </div>
+</section>
+<!-- SETTINGS -->
+<section id="sec-settings" class="page-section">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">⚙️ إعدادات المطعم</div>
+      <div class="form-group"><label>اسم المطعم</label><input type="text" value="Ravero — فرع وسط المدينة"></div>
+      <div class="form-group"><label>العنوان</label><input type="text" value="123 شارع النيل، القاهرة"></div>
+      <div class="form-row">
+        <div class="form-group"><label>رقم الهاتف</label><input type="text" value="01000000000"></div>
+        <div class="form-group"><label>الضريبة (%)</label><input type="number" value="14"></div>
+      </div>
+      <div class="form-group"><label>ساعات العمل</label><input type="text" value="10:00 صباحاً — 2:00 صباحاً"></div>
+      <button class="btn btn-gold" onclick="showToast('✅','تم حفظ الإعدادات بنجاح','الإعدادات')"><i class="fa fa-save"></i> حفظ الإعدادات</button>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:14px">🖨️ إعدادات الطباعة</div>
+        <div class="form-group"><label>طابعة الإيصالات</label><select><option>EPSON TM-T88VI</option><option>Star TSP143</option></select></div>
+        <div class="form-group"><label>طابعة المطبخ</label><select><option>EPSON TM-T88VI — الثانية</option></select></div>
+        <button class="btn btn-ghost btn-sm" onclick="showToast('🖨️','جار الطباعة التجريبية...','الطابعة')"><i class="fa fa-print"></i> اختبار الطباعة</button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">💳 بوابات الدفع</div>
+        <table class="data-table">
+          <tr><td>Fawry</td><td><span class="badge success">متصل</span></td><td><button class="btn btn-outline btn-xs">إعداد</button></td></tr>
+          <tr><td>Paymob</td><td><span class="badge success">متصل</span></td><td><button class="btn btn-outline btn-xs">إعداد</button></td></tr>
+          <tr><td>Vodafone Cash</td><td><span class="badge warning">معلق</span></td><td><button class="btn btn-gold btn-xs">تفعيل</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- EMPLOYEES -->
+<section id="sec-employees" class="page-section">
+  <div style="display:flex;gap:10px;margin-bottom:16px"><button class="btn btn-gold btn-sm"><i class="fa fa-user-plus"></i> إضافة موظف</button><button class="btn btn-ghost btn-sm"><i class="fa fa-clock"></i> جدول الورديات</button></div>
+  <div class="card">
+    <table class="data-table"><thead><tr><th>الموظف</th><th>الوظيفة</th><th>الفرع</th><th>ساعات اليوم</th><th>المبيعات</th><th>الحالة</th></tr></thead>
+    <tbody>
+      <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="width:30px;height:30px;font-size:11px">أح</div>أحمد محمد</div></td><td>كاشير</td><td>الرئيسي</td><td>6 ساعات</td><td><span style="color:var(--gold)">8,400 ج.م</span></td><td><span class="badge success">نشط</span></td></tr>
+      <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="width:30px;height:30px;font-size:11px">سم</div>سمر علي</div></td><td>كاشير</td><td>الرئيسي</td><td>5 ساعات</td><td><span style="color:var(--gold)">5,880 ج.م</span></td><td><span class="badge success">نشط</span></td></tr>
+      <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="width:30px;height:30px;font-size:11px">مح</div>محمود حسن</div></td><td>طباخ رئيسي</td><td>الرئيسي</td><td>8 ساعات</td><td>—</td><td><span class="badge success">نشط</span></td></tr>
+      <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="width:30px;height:30px;font-size:11px">عم</div>عمر خالد</div></td><td>مندوب توصيل</td><td>الرئيسي</td><td>7 ساعات</td><td><span style="color:var(--gold)">28 طلب</span></td><td><span class="badge success">في الطريق</span></td></tr>
+      <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar" style="width:30px;height:30px;font-size:11px">نو</div>نور إبراهيم</div></td><td>مدير فرع</td><td>الرئيسي</td><td>9 ساعات</td><td>—</td><td><span class="badge success">نشط</span></td></tr>
+    </tbody></table>
+  </div>
+</section>
+<!-- BRANCHES -->
+<section id="sec-branches" class="page-section">
+  <div style="display:flex;gap:10px;margin-bottom:16px"><button class="btn btn-gold btn-sm"><i class="fa fa-plus"></i> فرع جديد</button></div>
+  <div class="grid-2">
+    <div class="stat-card gold"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div class="stat-icon gold"><i class="fa fa-store"></i></div><span class="badge success">نشط</span></div><div style="font-size:16px;font-weight:700;margin-bottom:4px">الفرع الرئيسي — وسط المدينة</div><div style="font-size:12px;color:var(--gray2);margin-bottom:10px">123 شارع النيل، القاهرة</div><div style="display:flex;gap:16px"><div><div style="font-size:20px;font-weight:700;color:var(--gold)">147</div><div style="font-size:11px;color:var(--gray2)">طلب اليوم</div></div><div><div style="font-size:20px;font-weight:700;color:var(--success)">14,280</div><div style="font-size:11px;color:var(--gray2)">إيراد</div></div></div></div>
+    <div class="stat-card"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div class="stat-icon blue"><i class="fa fa-store"></i></div><span class="badge success">نشط</span></div><div style="font-size:16px;font-weight:700;margin-bottom:4px">فرع المستشفى</div><div style="font-size:12px;color:var(--gray2);margin-bottom:10px">مستشفى النيل، شارع الجمهورية</div><div style="display:flex;gap:16px"><div><div style="font-size:20px;font-weight:700">89</div><div style="font-size:11px;color:var(--gray2)">طلب اليوم</div></div><div><div style="font-size:20px;font-weight:700;color:var(--success)">9,100</div><div style="font-size:11px;color:var(--gray2)">إيراد</div></div></div></div>
+    <div class="stat-card"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div class="stat-icon green"><i class="fa fa-store"></i></div><span class="badge success">نشط</span></div><div style="font-size:16px;font-weight:700;margin-bottom:4px">فرع الجامعة</div><div style="font-size:12px;color:var(--gray2);margin-bottom:10px">جامعة القاهرة، الجيزة</div><div style="display:flex;gap:16px"><div><div style="font-size:20px;font-weight:700">112</div><div style="font-size:11px;color:var(--gray2)">طلب اليوم</div></div><div><div style="font-size:20px;font-weight:700;color:var(--success)">10,640</div><div style="font-size:11px;color:var(--gray2)">إيراد</div></div></div></div>
+    <div class="stat-card"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div class="stat-icon purple"><i class="fa fa-store"></i></div><span class="badge warning">إعداد</span></div><div style="font-size:16px;font-weight:700;margin-bottom:4px">فرع المطار</div><div style="font-size:12px;color:var(--gray2);margin-bottom:10px">مطار القاهرة الدولي</div><div style="font-size:13px;color:var(--warning)"><i class="fa fa-tools"></i> يفتتح قريباً</div></div>
+  </div>
+</section>
+    </div>
+  </div>
+</div>
+<script>
+const MENU=[
+  {id:1,name:'برجر كلاسيك',desc:'لحم بقري طازج مع الجبن',price:89,cat:'burger',emoji:'🍔',cost:38},
+  {id:2,name:'برجر مزدوج',desc:'قطعتا لحم مع صلصة الشيف',price:129,cat:'burger',emoji:'🍔',cost:55},
+  {id:3,name:'تشيكن برجر',desc:'دجاج مقرمش مع صلصة الثوم',price:79,cat:'burger',emoji:'🐔',cost:32},
+  {id:4,name:'بيتزا مارغريتا',desc:'صلصة طماطم وموتزاريلا',price:110,cat:'pizza',emoji:'🍕',cost:42},
+  {id:5,name:'بيتزا بيبروني',desc:'بيبروني فاخر مع جبن',price:140,cat:'pizza',emoji:'🍕',cost:58},
+  {id:6,name:'باستا بولونيز',desc:'باستا إيطالية بصلصة اللحم',price:95,cat:'pasta',emoji:'🍝',cost:35},
+  {id:7,name:'كابتشينو',desc:'إسبريسو مضاعف مع حليب',price:45,cat:'drinks',emoji:'☕',cost:12},
+  {id:8,name:'موهيتو ليمون',desc:'ليمون طازج بالنعناع',price:55,cat:'drinks',emoji:'🍹',cost:15},
+  {id:9,name:'كيك الشوكولاتة',desc:'قطعة كيك بالشوكولاتة',price:65,cat:'dessert',emoji:'🎂',cost:22},
+  {id:10,name:'سلطة سيزر',desc:'خس رومين بصوص سيزر',price:72,cat:'salad',emoji:'🥗',cost:28},
+  {id:11,name:'آيس كريم',desc:'فانيليا مع صوص الشوكولاتة',price:48,cat:'dessert',emoji:'🍦',cost:18},
+  {id:12,name:'شاي بالنعناع',desc:'شاي أحمر طازج',price:30,cat:'drinks',emoji:'🍵',cost:8},
+];
+const ORDERS_DATA=[
+  {id:'#1847',table:'T-3',status:'new',items:['برجر كلاسيك x2','قهوة x1'],total:223,time:'منذ 2 د',type:'dine'},
+  {id:'#1848',table:'دليفري',status:'new',items:['بيتزا بيبروني x1','موهيتو x2'],total:250,time:'منذ 4 د',type:'delivery'},
+  {id:'#1849',table:'T-1',status:'new',items:['باستا x1','سيزر x1'],total:167,time:'منذ 6 د',type:'dine'},
+  {id:'#1844',table:'T-5',status:'prep',items:['برجر مزدوج x1','آيس كريم x2'],total:225,time:'منذ 12 د',type:'dine'},
+  {id:'#1845',table:'دليفري',status:'prep',items:['بيتزا مارغريتا x2'],total:220,time:'منذ 15 د',type:'delivery'},
+  {id:'#1843',table:'T-2',status:'ready',items:['كابتشينو x2','كيك x1'],total:155,time:'منذ 18 د',type:'dine'},
+  {id:'#1842',table:'دليفري',status:'done',items:['تشيكن برجر x3'],total:237,time:'منذ 25 د',type:'delivery'},
+];
+const INVENTORY_DATA=[
+  {name:'لحم بقري مفروم',qty:8.5,min:5,unit:'كجم',supplier:'مزرعة النيل',status:'ok'},
+  {name:'دجاج مقطع',qty:4.2,min:4,unit:'كجم',supplier:'دواجن الخير',status:'warning'},
+  {name:'صلصة طماطم',qty:1.2,min:3,unit:'لتر',supplier:'مصنع الأصيل',status:'danger'},
+  {name:'خبز برجر',qty:24,min:30,unit:'قطعة',supplier:'مخبز الجودة',status:'danger'},
+  {name:'جبن موتزاريلا',qty:5.8,min:3,unit:'كجم',supplier:'ألبان الذوق',status:'ok'},
+  {name:'بيبروني',qty:2.1,min:1,unit:'كجم',supplier:'دلل فودز',status:'ok'},
+  {name:'بن قهوة',qty:3.4,min:2,unit:'كجم',supplier:'قهوة عربيكا',status:'ok'},
+];
+const CUSTOMERS_DATA=[
+  {name:'أحمد السيد',phone:'0101234567',orders:48,points:4820,tier:'ذهبي'},
+  {name:'سارة محمود',phone:'0112345678',orders:32,points:2100,tier:'ذهبي'},
+  {name:'محمد علي',phone:'0123456789',orders:87,points:8740,tier:'VIP'},
+  {name:'نورا خالد',phone:'0134567890',orders:19,points:950,tier:'فضي'},
+  {name:'عمر حسن',phone:'0145678901',orders:124,points:12400,tier:'VIP'},
+  {name:'ريم عبدالله',phone:'0156789012',orders:8,points:320,tier:'برونز'},
+];
+const COUPONS_DATA=[
+  {code:'RAMADAN50',disc:'50%',max:500,used:312,expiry:'30 يونيو 2026',status:'active'},
+  {code:'WELCOME20',disc:'20%',max:1000,used:487,expiry:'31 ديسمبر 2026',status:'active'},
+  {code:'HAPPY10',disc:'10 ج.م',max:200,used:200,expiry:'30 مايو 2026',status:'expired'},
+  {code:'VIP25',disc:'25%',max:100,used:67,expiry:'31 يوليو 2026',status:'active'},
+];
+let cart=[];
+let currentUser={name:'مدير النظام',role:'مدير | صلاحيات كاملة',initial:'م'};
+
+function updateClock(){const n=new Date();document.getElementById('live-clock').textContent=n.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+setInterval(updateClock,1000);updateClock();
+
+function quickLogin(name,role){
+  document.getElementById('login-email').value=role+'@ravero.com';
+  document.getElementById('login-pass').value='12345678';
+  currentUser.name=name;currentUser.initial=name.charAt(0);
+  const rm={admin:'مدير | صلاحيات كاملة',cashier:'كاشير | POS فقط',kitchen:'مطبخ | شاشة الطلبات',driver:'مندوب | تطبيق التوصيل'};
+  currentUser.role=rm[role]||'موظف';
+  setTimeout(doLogin,100);
+}
+function doLogin(){
+  const s=document.getElementById('splash');
+  s.classList.add('hidden');
+  setTimeout(()=>{
+    s.style.display='none';
+    document.getElementById('app').classList.add('visible');
+    document.getElementById('user-name-sb').textContent=currentUser.name;
+    document.getElementById('user-role-sb').textContent=currentUser.role;
+    document.getElementById('user-avatar-sb').textContent=currentUser.initial;
+    initApp();
+  },600);
+}
+function doLogout(){
+  document.getElementById('app').classList.remove('visible');
+  const s=document.getElementById('splash');s.style.display='flex';s.classList.remove('hidden');
+}
+function initApp(){
+  renderMenuGrid('all');renderOrdersBoard();renderInventory();renderCustomers();
+  renderCoupons();renderKitchen();renderDelivery();renderTables();renderMenuTable();
+  renderTopProducts();initCharts();
+  setTimeout(()=>{
+    showToast('👋','مرحباً '+currentUser.name+'!','تم تسجيل الدخول');
+    setTimeout(()=>showToast('⚠️','صنفان على وشك النفاد','تنبيه المخزون'),3000);
+    setTimeout(()=>showToast('🎉','طلب دليفري جديد #1850','طلب جديد'),6000);
+  },500);
+}
+function goTo(id,el){
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const sec=document.getElementById('sec-'+id);if(sec)sec.classList.add('active');
+  if(el)el.classList.add('active');
+  const titles={dashboard:'لوحة التحكم',pos:'نقطة البيع POS',orders:'الطلبات',kitchen:'شاشة المطبخ',delivery:'التوصيل',tables:'الطاولات','menu-mgmt':'إدارة المنيو',inventory:'المخزون',customers:'العملاء',loyalty:'الولاء والنقاط',marketing:'التسويق',accounting:'المحاسبة',reports:'التقارير',ai:'مركز الذكاء الاصطناعي',settings:'الإعدادات',employees:'الموظفون',branches:'الفروع'};
+  document.getElementById('page-title').textContent=titles[id]||id;
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
+
+function renderMenuGrid(cat){
+  const items=cat==='all'?MENU:MENU.filter(m=>m.cat===cat);
+  document.getElementById('menu-grid').innerHTML=items.map(item=>`
+    <div class="menu-item" onclick="addToCart(${item.id})">
+      <div class="menu-item-img">${item.emoji}</div>
+      <div class="menu-item-name">${item.name}</div>
+      <div class="menu-item-desc">${item.desc}</div>
+      <div class="menu-item-footer"><div class="menu-item-price">${item.price} ج.م</div><div class="add-btn">+</div></div>
+    </div>`).join('');
+}
+function filterCat(cat,el){
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');renderMenuGrid(cat);
+}
+function addToCart(id){
+  const item=MENU.find(m=>m.id===id);
+  const ex=cart.find(c=>c.id===id);
+  if(ex)ex.qty++;else cart.push({...item,qty:1});
+  renderCart();showToast('🛒',item.name+' أضيف للطلب','تمت الإضافة');
+}
+function changeQty(id,delta){
+  const item=cart.find(c=>c.id===id);if(!item)return;
+  item.qty+=delta;if(item.qty<=0)cart=cart.filter(c=>c.id!==id);renderCart();
+}
+function renderCart(){
+  const el=document.getElementById('cart-items');
+  if(!cart.length){el.innerHTML='<div style="text-align:center;color:var(--gray);padding:40px 0;font-size:13px"><i class="fa fa-shopping-cart" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>السلة فارغة</div>';updateTotals();return;}
+  el.innerHTML=cart.map(c=>`
+    <div class="cart-item">
+      <div class="cart-item-emoji">${c.emoji}</div>
+      <div class="cart-item-info"><div class="cart-item-name">${c.name}</div><div class="cart-item-price">${c.price*c.qty} ج.م</div></div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(${c.id},-1)">−</button>
+        <div class="qty-num">${c.qty}</div>
+        <button class="qty-btn" onclick="changeQty(${c.id},1)">+</button>
+      </div>
+    </div>`).join('');
+  updateTotals();
+}
+function updateTotals(){
+  const sub=cart.reduce((s,c)=>s+c.price*c.qty,0);
+  const vat=Math.round(sub*.14);
+  document.getElementById('sub-total').textContent=sub+' ج.م';
+  document.getElementById('vat-total').textContent=vat+' ج.م';
+  document.getElementById('grand-total').textContent=(sub+vat)+' ج.م';
+}
+function selectPay(btn){document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function selectTable(el){document.querySelectorAll('.table-badge').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');}
+function confirmOrder(){
+  if(!cart.length){showToast('⚠️','الرجاء إضافة منتجات للطلب','السلة فارغة');return;}
+  showToast('✅','تم إرسال الطلب للمطبخ وطباعة الفاتورة!','تم تأكيد الطلب #'+(1850+Math.floor(Math.random()*50)));
+  cart=[];renderCart();
+}
+function renderOrdersBoard(){
+  const cols=[{key:'new',label:'🔵 جديد',cls:'col-new'},{key:'prep',label:'🟡 تحضير',cls:'col-prep'},{key:'ready',label:'🟢 جاهز',cls:'col-ready'},{key:'done',label:'✓ مكتمل',cls:'col-done'}];
+  document.getElementById('orders-board').innerHTML=cols.map(col=>{
+    const orders=ORDERS_DATA.filter(o=>o.status===col.key);
+    return`<div class="order-col ${col.cls}">
+      <div class="order-col-header">${col.label}<span class="count">${orders.length}</span></div>
+      ${orders.map(o=>`<div class="order-card">
+        <div class="order-card-top"><div class="order-num">${o.id}</div><div class="order-time">${o.time}</div></div>
+        <div style="font-size:12px;color:var(--gold);margin-bottom:4px">${o.table}</div>
+        <div style="font-size:11px;color:var(--gray2);line-height:1.6">${o.items.join('<br>')}</div>
+        <div class="order-footer"><div class="order-price">${o.total} ج.م</div>
+        ${col.key!=='done'?`<button class="btn btn-gold btn-xs" onclick="advanceOrder('${o.id}')">→ التالي</button>`:''}
+        </div></div>`).join('')}
+    </div>`;}).join('');
+}
+function advanceOrder(id){
+  const o=ORDERS_DATA.find(x=>x.id===id);if(!o)return;
+  const s=['new','prep','ready','done'];const i=s.indexOf(o.status);
+  if(i<s.length-1)o.status=s[i+1];
+  renderOrdersBoard();showToast('📦','تم تحديث الطلب '+id,'تحديث الطلب');
+}
+function renderKitchen(){
+  const active=ORDERS_DATA.filter(o=>o.status==='prep'||o.status==='new');
+  document.getElementById('kitchen-board').innerHTML=active.map(o=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:700">${o.id}</div>
+        <span class="badge ${o.status==='prep'?'warning':'info'}">${o.status==='prep'?'تحضير':'جديد'}</span>
+      </div>
+      <div style="font-size:14px;color:var(--gold);margin-bottom:8px">${o.table}</div>
+      ${o.items.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--dark3)"><i class="fa fa-circle" style="color:var(--dark4);font-size:8px"></i><span style="font-size:13px">${i}</span></div>`).join('')}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-gold btn-sm" onclick="advanceOrder('${o.id}');renderKitchen()" style="flex:1">✅ جاهز</button>
+        <button class="btn btn-ghost btn-sm"><i class="fa fa-print"></i></button>
+      </div>
+    </div>`).join('')||'<div class="card" style="text-align:center;padding:40px;color:var(--gray)"><i class="fa fa-check-circle" style="font-size:40px;display:block;margin-bottom:10px;color:var(--success)"></i>لا توجد طلبات معلقة!</div>';
+}
+function renderDelivery(){
+  const deliveries=[
+    {name:'عمر خالد',addr:'12 شارع النيل، الدقي',order:'#1848',status:'في الطريق',eta:'8 د',emoji:'🛵'},
+    {name:'كريم أحمد',addr:'45 شارع التحرير، الزمالك',order:'#1845',status:'تم التسليم',eta:'اكتمل',emoji:'✅'},
+    {name:'ياسر محمود',addr:'مستشفى النيل',order:'#1851',status:'انتظار',eta:'جاهز',emoji:'⏳'},
+  ];
+  document.getElementById('delivery-list').innerHTML=deliveries.map(d=>`
+    <div class="delivery-card">
+      <div class="delivery-avatar">${d.emoji}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;margin-bottom:2px">${d.name}</div>
+        <div style="font-size:12px;color:var(--gray2);margin-bottom:6px">${d.addr}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="badge info">${d.order}</span>
+          <span class="badge ${d.status==='تم التسليم'?'success':d.status==='في الطريق'?'warning':'gray'}">${d.status}</span>
+          <span style="font-size:11px;color:var(--gray2)">ETA: ${d.eta}</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm"><i class="fa fa-phone"></i></button>
+    </div>`).join('');
+}
+function renderTables(){
+  const tables=[
+    {num:'T-1',cap:4,status:'مشغولة',order:'#1847'},{num:'T-2',cap:2,status:'مشغولة',order:'#1843'},
+    {num:'T-3',cap:6,status:'مشغولة',order:'#1849'},{num:'T-4',cap:4,status:'متاحة',order:null},
+    {num:'T-5',cap:8,status:'مشغولة',order:'#1844'},{num:'T-6',cap:2,status:'متاحة',order:null},
+    {num:'T-7',cap:4,status:'محجوزة',order:null},{num:'T-8',cap:4,status:'متاحة',order:null},
+    {num:'T-9',cap:2,status:'متاحة',order:null},{num:'T-10',cap:6,status:'متاحة',order:null},
+    {num:'T-11',cap:4,status:'محجوزة',order:null},{num:'T-12',cap:8,status:'متاحة',order:null},
+  ];
+  document.getElementById('tables-grid').innerHTML=tables.map(t=>`
+    <div class="card" style="cursor:pointer;border-color:${t.status==='مشغولة'?'rgba(231,76,60,.3)':t.status==='محجوزة'?'rgba(243,156,18,.3)':'var(--dark3)'}" onclick="showToast('🪑','طاولة ${t.num} — ${t.status}','الطاولات')">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:18px;font-weight:700">${t.num}</div>
+        <span class="badge ${t.status==='مشغولة'?'danger':t.status==='محجوزة'?'warning':'success'}">${t.status}</span>
+      </div>
+      <div style="font-size:12px;color:var(--gray2)">سعة: ${t.cap} أشخاص</div>
+      ${t.order?`<div style="font-size:12px;color:var(--gold);margin-top:4px">${t.order}</div>`:''}
+      <div style="margin-top:10px">
+        ${t.status==='متاحة'?`<button class="btn btn-gold btn-xs" style="width:100%">تعيين طلب</button>`:''}
+        ${t.status==='مشغولة'?`<button class="btn btn-ghost btn-xs" style="width:100%"><i class="fa fa-receipt"></i> الفاتورة</button>`:''}
+        ${t.status==='محجوزة'?`<button class="btn btn-outline btn-xs" style="width:100%">تفاصيل الحجز</button>`:''}
+      </div>
+    </div>`).join('');
+}
+function renderMenuTable(){
+  document.getElementById('menu-table-body').innerHTML=MENU.map(item=>{
+    const m=Math.round((item.price-item.cost)/item.price*100);
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">${item.emoji}</span>${item.name}</div></td>
+      <td><span class="badge gray">${{burger:'برجر',pizza:'بيتزا',pasta:'باستا',drinks:'مشروبات',dessert:'حلويات',salad:'سلطات'}[item.cat]}</span></td>
+      <td><strong style="color:var(--gold)">${item.price} ج.م</strong></td>
+      <td>${item.cost} ج.م</td>
+      <td><span style="color:${m>55?'var(--success)':m>40?'var(--warning)':'var(--danger)'}">${m}%</span></td>
+      <td><span class="badge success">نشط</span></td>
+      <td><button class="btn btn-outline btn-xs"><i class="fa fa-edit"></i></button> <button class="btn btn-danger btn-xs"><i class="fa fa-trash"></i></button></td>
+    </tr>`;}).join('');
+}
+function renderInventory(){
+  document.getElementById('inventory-table').innerHTML=INVENTORY_DATA.map(item=>{
+    const pct=Math.min(100,Math.round(item.qty/(item.min*2)*100));
+    const cls=item.status==='ok'?'green':item.status==='warning'?'yellow':'red';
+    return`<tr>
+      <td>${item.name}</td>
+      <td><div style="font-size:14px;font-weight:600;color:${item.status==='danger'?'var(--danger)':item.status==='warning'?'var(--warning)':'var(--white)'}">${item.qty} ${item.unit}</div><div style="height:6px;background:var(--dark3);border-radius:3px;overflow:hidden;margin-top:4px"><div style="height:100%;border-radius:3px;width:${pct}%;background:${cls==='green'?'var(--success)':cls==='yellow'?'var(--warning)':'var(--danger)'}"></div></div></td>
+      <td>${item.min} ${item.unit}</td>
+      <td>${item.unit}</td>
+      <td>${item.supplier}</td>
+      <td><span class="badge ${item.status==='ok'?'success':item.status==='warning'?'warning':'danger'}">${item.status==='ok'?'جيد':item.status==='warning'?'منخفض':'حرج'}</span></td>
+    </tr>`;}).join('');
+}
+function renderCustomers(){
+  const tc={VIP:'gold',ذهبي:'warning',فضي:'gray',برونز:'gray'};
+  document.getElementById('customers-grid').innerHTML=CUSTOMERS_DATA.map(c=>`
+    <div style="display:flex;align-items:center;gap:14px;background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius);padding:14px;transition:border-color .2s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--dark3)'">
+      <div class="user-avatar" style="width:44px;height:44px;font-size:18px">${c.name.charAt(0)}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${c.name}</div>
+        <div style="font-size:11px;color:var(--gray2);margin-top:2px">${c.phone}</div>
+        <div style="margin-top:6px"><span class="badge ${tc[c.tier]||'gray'}">${c.tier==='VIP'?'👑 VIP':c.tier}</span></div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:20px;font-weight:700;color:var(--gold)">${c.orders}</div>
+        <div style="font-size:10px;color:var(--gray2)">طلب</div>
+        <div style="font-size:13px;font-weight:600;color:var(--purple);margin-top:4px">${c.points.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--gray2)">نقطة</div>
+      </div>
+    </div>`).join('');
+}
+function renderCoupons(){
+  document.getElementById('coupons-table').innerHTML=COUPONS_DATA.map(c=>`
+    <tr>
+      <td><code style="background:var(--dark2);padding:2px 8px;border-radius:4px;color:var(--gold);font-size:12px">${c.code}</code></td>
+      <td><strong>${c.disc}</strong></td>
+      <td>${c.max}</td>
+      <td>${c.used} <small style="color:var(--gray2)">(${Math.round(c.used/c.max*100)}%)</small></td>
+      <td style="font-size:12px;color:var(--gray2)">${c.expiry}</td>
+      <td><span class="badge ${c.status==='active'?'success':'danger'}">${c.status==='active'?'نشط':'منتهي'}</span></td>
+    </tr>`).join('');
+}
+function renderTopProducts(){
+  const top=[
+    {name:'برجر مزدوج',emoji:'🍔',sold:48,rev:6192},
+    {name:'بيتزا بيبروني',emoji:'🍕',sold:37,rev:5180},
+    {name:'كابتشينو',emoji:'☕',sold:94,rev:4230},
+    {name:'تشيكن برجر',emoji:'🐔',sold:52,rev:4108},
+    {name:'باستا بولونيز',emoji:'🍝',sold:41,rev:3895},
+  ];
+  document.getElementById('top-products-list').innerHTML=top.map((p,i)=>`
+    <div class="top-product">
+      <div class="top-product-rank ${i===0?'gold-rank':''}">${i+1}</div>
+      <div style="font-size:22px">${p.emoji}</div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600">${p.name}</div><div style="font-size:11px;color:var(--gray2)">${p.sold} قطعة</div></div>
+      <div style="font-size:13px;font-weight:700;color:var(--gold)">${p.rev.toLocaleString()} ج.م</div>
+    </div>`).join('');
+}
+let chartsInit=false;
+function initCharts(){
+  if(chartsInit)return;chartsInit=true;
+  Chart.defaults.color='rgba(255,255,255,0.6)';
+  Chart.defaults.font={family:'Cairo, sans-serif',size:11};
+  const days=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  const rev=[9800,11200,10500,13800,15200,18600,14280];
+  new Chart(document.getElementById('revenueChart'),{type:'bar',data:{labels:days,datasets:[{label:'الإيرادات',data:rev,backgroundColor:'rgba(201,168,76,.7)',borderColor:'#C9A84C',borderWidth:1,borderRadius:6},{label:'المصروفات',data:rev.map(v=>Math.round(v*.65)),backgroundColor:'transparent',borderColor:'#3498DB',borderWidth:2,type:'line',tension:.4,fill:false,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{usePointStyle:true}}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>v.toLocaleString()}},x:{grid:{display:false}}}}});
+  new Chart(document.getElementById('orderTypeChart'),{type:'doughnut',data:{labels:['داخل الفرع','توصيل','استلام'],datasets:[{data:[58,26,16],backgroundColor:['rgba(201,168,76,.8)','rgba(52,152,219,.8)','rgba(46,204,113,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:16}}},cutout:'65%'}});
+  new Chart(document.getElementById('marketingChart'),{type:'bar',data:{labels:['WhatsApp','SMS','Email','Push'],datasets:[{label:'مُرسَل',data:[2400,1800,320,4100],backgroundColor:'rgba(201,168,76,.5)'},{label:'نقر',data:[1632,612,230,861],backgroundColor:'rgba(46,204,113,.5)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{usePointStyle:true}}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'}},x:{grid:{display:false}}}}});
+  new Chart(document.getElementById('plChart'),{type:'line',data:{labels:['يناير','فبراير','مارس','أبريل','مايو','يونيو'],datasets:[{label:'الإيرادات',data:[210000,224000,195000,248000,271000,284600],borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.1)',tension:.4,fill:true,pointRadius:4},{label:'المصروفات',data:[158000,165000,148000,180000,192000,187300],borderColor:'#E74C3C',backgroundColor:'rgba(231,76,60,.05)',tension:.4,fill:true,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{usePointStyle:true}}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>(v/1000)+'k'}},x:{grid:{display:false}}}}});
+  new Chart(document.getElementById('aiChart'),{type:'line',data:{labels:['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'],datasets:[{label:'توقع AI',data:[14280,16400,13200,15800,17600,19200,22000],borderColor:'#9B59B6',backgroundColor:'rgba(155,89,182,.1)',tension:.4,fill:true,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{usePointStyle:true}}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>v.toLocaleString()}},x:{grid:{display:false}}}}});
+}
+function showToast(icon,msg,title){
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML=`<div class="toast-icon">${icon}</div><div style="flex:1"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><div class="toast-close" onclick="this.parentElement.remove()">✕</div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(()=>{el.classList.add('removing');setTimeout(()=>el.remove(),300);},4000);
+}
+function showNotifications(){showToast('🔔','لديك 3 إشعارات غير مقروءة','الإشعارات');}
+function showModal(title,body){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+function showAddOrder(){
+  showModal('طلب جديد',`<div class="form-row"><div class="form-group"><label>نوع الطلب</label><select><option>داخل الفرع</option><option>دليفري</option><option>استلام</option></select></div><div class="form-group"><label>الطاولة</label><select><option>T-1</option><option>T-4</option><option>T-6</option></select></div></div><div class="form-group"><label>العميل</label><input type="text" placeholder="بحث عن عميل..."></div><div class="form-group"><label>ملاحظات</label><textarea rows="2" placeholder="طلبات خاصة..."></textarea></div><button class="btn btn-gold" style="width:100%" onclick="showToast('✅','تم إنشاء الطلب','طلب جديد');closeModal()"><i class="fa fa-plus"></i> إنشاء الطلب</button>`);
+}
+function showAddMenuItem(){
+  showModal('إضافة منتج',`<div class="form-row"><div class="form-group"><label>اسم المنتج</label><input type="text" placeholder="برجر الشيف"></div><div class="form-group"><label>الفئة</label><select><option>برجر</option><option>بيتزا</option><option>مشروبات</option></select></div></div><div class="form-group"><label>الوصف</label><textarea rows="2"></textarea></div><div class="form-row"><div class="form-group"><label>السعر</label><input type="number" value="120"></div><div class="form-group"><label>تكلفة الإنتاج</label><input type="number" value="45"></div></div><button class="btn btn-gold" style="width:100%" onclick="showToast('✅','تمت الإضافة','المنيو');closeModal()"><i class="fa fa-save"></i> حفظ</button>`);
+}
+function showAddCoupon(){
+  showModal('كوبون جديد',`<div class="form-row"><div class="form-group"><label>كود الكوبون</label><input type="text" placeholder="SUMMER30"></div><div class="form-group"><label>نوع الخصم</label><select><option>نسبة %</option><option>مبلغ ثابت</option></select></div></div><div class="form-row"><div class="form-group"><label>القيمة</label><input type="number" value="20"></div><div class="form-group"><label>الحد الأقصى</label><input type="number" value="500"></div></div><div class="form-group"><label>تاريخ الانتهاء</label><input type="date"></div><button class="btn btn-gold" style="width:100%" onclick="showToast('🎟️','تم إنشاء الكوبون','كوبون جديد');closeModal()"><i class="fa fa-save"></i> إنشاء</button>`);
+}
+function switchTab(btn){btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+const aiResponses=[
+  'بناءً على بيانات الأسبوع الماضي، أتوقع مبيعات الغد بين 15,000 و18,000 ج.م. الذروة بين 7-9 مساءً.',
+  'أنصحك بإضافة عرض "وجبة عائلية" بخصم 20% نهاية الأسبوع. هذا النوع رفع مبيعات مطاعم مشابهة 35%.',
+  'العملاء الأكثر ولاءً يفضلون البرجر المزدوج والكابتشينو. أنصح بباقة تجمعهما بسعر مميز.',
+  '18 عميل VIP لم يطلبوا 14 يوماً. أرسل رسالة شخصية مع كوبون خاص؟',
+  'أعلى أوقات المبيعات: الجمعة 8-11 مساءً. أقل الأوقات: الثلاثاء 3-5 عصراً.',
+];
+let aiIdx=0;
+function sendAI(){
+  const input=document.getElementById('ai-input');
+  const chat=document.getElementById('ai-chat');
+  if(!input.value.trim())return;
+  chat.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:rgba(201,168,76,.15);border-radius:10px 0 10px 10px;padding:8px 12px;font-size:12px;max-width:80%;color:var(--gold)">${input.value}</div></div>`;
+  input.value='';
+  setTimeout(()=>{
+    const resp=aiResponses[aiIdx%aiResponses.length];aiIdx++;
+    chat.innerHTML+=`<div style="display:flex;gap:10px;margin-bottom:12px"><div style="width:28px;height:28px;border-radius:50%;background:rgba(155,89,182,.2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div><div style="background:var(--dark3);border-radius:0 10px 10px 10px;padding:10px 12px;font-size:12px;max-width:80%;line-height:1.6">${resp}</div></div>`;
+    chat.scrollTop=chat.scrollHeight;
+  },800);
+  chat.scrollTop=chat.scrollHeight;
+}
+</script>
+</body>
+</html>
